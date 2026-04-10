@@ -78,15 +78,15 @@ export default function IdeaForm() {
         <Timer seconds={TIMER_SECONDS} onExpire={handleTimerExpire} />
       </div>
 
-      {/* Mini-Karten Referenz */}
+      {/* Mini-Karten Referenz — antippen für Details */}
       {gameState.scenario && (
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-          <Card type="scenario" card={gameState.scenario} mini />
+          <Card type="scenario" card={gameState.scenario} mini expandable />
           {gameState.dataCards.map(d => (
-            <Card key={d.id} type="data" card={d} mini />
+            <Card key={d.id} type="data" card={d} mini expandable />
           ))}
           {gameState.reflection && (
-            <Card type="reflection" card={gameState.reflection} mini />
+            <Card type="reflection" card={gameState.reflection} mini expandable />
           )}
         </div>
       )}

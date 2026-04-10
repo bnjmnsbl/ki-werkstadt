@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useReviews } from '../hooks/useReviews'
 import IdeaCard from '../components/IdeaCard'
 import ChipAllocator from '../components/ChipAllocator'
@@ -11,9 +11,7 @@ const TOTAL_CHIPS = 10
 export default function Review() {
   const navigate = useNavigate()
   const { ideas, loading, error, submitReviews } = useReviews()
-  const [currentIndex, setCurrentIndex] = useState(0)
   const [allocations, setAllocations] = useState<Record<string, number>>({})
-  const [showSummary, setShowSummary] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -76,97 +74,55 @@ export default function Review() {
     )
   }
 
-  if (showSummary) {
-    return (
-      <div className="min-h-dvh flex flex-col px-4 py-8 max-w-2xl mx-auto w-full">
+  return (
+    <div className="min-h-dvh flex flex-col px-4 py-8 max-w-2xl mx-auto w-full">
+      <div className="flex items-center justify-between mb-2">
         <Logo size="sm" />
-        <h2 className="text-2xl font-bold text-white mt-6 mb-6" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Deine Bewertung
-        </h2>
-        <div className="space-y-4 mb-6">
-          {ideas.map(idea => (
-            <div key={idea.id} className="flex items-center justify-between p-4 rounded-xl bg-[var(--color-surface)]">
-              <span className="text-white font-medium">{idea.app_name}</span>
-              <span className="text-[var(--color-chip)] font-bold">{allocations[idea.id] ?? 0} 🪙</span>
-            </div>
-          ))}
+        <div className="text-sm text-[var(--color-chip)] font-bold">
+          Noch {remaining} Chip{remaining !== 1 ? 's' : ''} zu verteilen
         </div>
-        <div className="text-sm text-[var(--color-text-muted)] mb-6 text-center">
-          Verbleibend: {remaining} Chips
-        </div>
-        {remaining > 0 && (
-          <button onClick={() => setShowSummary(false)}
-                  className="w-full py-3 rounded-xl text-white border border-white/20 mb-3">
-            Chips umverteilen
-          </button>
-        )}
+      </div>
+
+      <p className="text-xs text-[var(--color-text-muted)] mb-6">
+        Verteile insgesamt 10 Chips auf die Ideen — du kannst jederzeit umverteilen.
+      </p>
+
+      <div className="flex flex-col gap-6">
+        {ideas.map((idea, i) => (
+          <motion.div
+            key={idea.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1, duration: 0.3 }}
+            className="flex flex-col gap-4"
+          >
+            <IdeaCard idea={idea} />
+            <ChipAllocator
+              ideaId={idea.id}
+              allocated={allocations[idea.id] ?? 0}
+              remaining={remaining}
+              onChange={handleChange}
+            />
+            {i < ideas.length - 1 && (
+              <div className="h-px bg-white/10" />
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-8 sticky bottom-4">
         {submitError && (
           <p className="text-[var(--color-danger)] text-sm mb-3 text-center">{submitError}</p>
         )}
         <button
           onClick={handleSubmit}
           disabled={remaining > 0 || submitting}
-          className="w-full py-4 rounded-xl font-bold text-lg text-white disabled:opacity-40"
-          style={{ background: 'var(--color-accent)' }}
+          className="w-full py-4 rounded-xl font-bold text-lg text-white disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+          style={{ background: remaining === 0 ? 'var(--color-accent)' : 'var(--color-surface)', border: remaining > 0 ? '1px solid rgba(255,255,255,0.1)' : undefined }}
         >
-          {submitting ? 'Wird gespeichert…' : 'Bewertung abschicken →'}
+          {submitting ? 'Wird gespeichert…' : remaining > 0 ? `Noch ${remaining} Chips verteilen` : 'Bewertung abschicken →'}
         </button>
       </div>
-    )
-  }
-
-  const currentIdea = ideas[currentIndex]
-
-  return (
-    <div className="min-h-dvh flex flex-col px-4 py-8 max-w-2xl mx-auto w-full">
-      <div className="flex items-center justify-between mb-6">
-        <Logo size="sm" />
-        <div className="text-sm text-[var(--color-text-muted)]">
-          {currentIndex + 1} / {ideas.length}
-        </div>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentIdea.id}
-          initial={{ x: 80, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: -80, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex-1 flex flex-col gap-6"
-        >
-          <IdeaCard idea={currentIdea} />
-
-          <ChipAllocator
-            ideaId={currentIdea.id}
-            allocated={allocations[currentIdea.id] ?? 0}
-            remaining={remaining}
-            onChange={handleChange}
-          />
-
-          <div className="flex gap-3 mt-auto">
-            {currentIndex > 0 && (
-              <button onClick={() => setCurrentIndex(i => i - 1)}
-                      className="flex-1 py-3 rounded-xl text-white border border-white/20">
-                ← Zurück
-              </button>
-            )}
-            {currentIndex < ideas.length - 1 ? (
-              <button onClick={() => setCurrentIndex(i => i + 1)}
-                      className="flex-1 py-3 rounded-xl text-white font-bold"
-                      style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-                Weiter →
-              </button>
-            ) : (
-              <button onClick={() => setShowSummary(true)}
-                      className="flex-1 py-3 rounded-xl text-white font-bold"
-                      style={{ background: 'var(--color-accent)' }}>
-                Zur Übersicht →
-              </button>
-            )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
     </div>
   )
 }

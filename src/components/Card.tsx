@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { Scenario, DataCard, ReflectionCard } from '../lib/types'
 
 type CardType = 'scenario' | 'data' | 'reflection'
@@ -9,6 +10,7 @@ type CardProps = {
   selected?: boolean
   dimmed?: boolean
   mini?: boolean
+  expandable?: boolean
   onClick?: () => void
 }
 
@@ -45,24 +47,83 @@ function getCardBody(card: Scenario | DataCard | ReflectionCard, type: CardType)
   return (card as ReflectionCard).condition
 }
 
-export default function Card({ type, card, selected, dimmed, mini, onClick }: CardProps) {
+export default function Card({ type, card, selected, dimmed, mini, expandable, onClick }: CardProps) {
   const cfg = typeConfig[type]
+  const [showDetail, setShowDetail] = useState(false)
 
   if (mini) {
     return (
-      <div
-        onClick={onClick}
-        className={`
-          rounded-lg border ${cfg.border} bg-gradient-to-br ${cfg.bg}
-          p-2 cursor-pointer select-none shrink-0
-          ${selected ? cfg.glow : ''}
-          ${dimmed ? 'opacity-40' : ''}
-        `}
-        style={{ minWidth: 72 }}
-      >
-        <div className={`text-xs font-bold ${cfg.nr}`}>{card.id}</div>
-        <div className="text-xs text-white font-medium leading-tight">{card.title}</div>
-      </div>
+      <>
+        <div
+          onClick={expandable ? () => setShowDetail(true) : onClick}
+          className={`
+            rounded-lg border ${cfg.border} bg-gradient-to-br ${cfg.bg}
+            p-2 select-none shrink-0
+            ${expandable || onClick ? 'cursor-pointer' : ''}
+            ${selected ? cfg.glow : ''}
+            ${dimmed ? 'opacity-40' : ''}
+          `}
+          style={{ minWidth: 72 }}
+        >
+          <div className={`text-xs font-bold ${cfg.nr}`}>{card.id}</div>
+          <div className="text-xs text-white font-medium leading-tight">{card.title}</div>
+          {expandable && (
+            <div className="text-[10px] text-white/40 mt-0.5">Tippen für Details</div>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {showDetail && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(0,0,0,0.7)' }}
+              onClick={() => setShowDetail(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                onClick={e => e.stopPropagation()}
+                className={`
+                  relative rounded-xl border-2 ${cfg.border} bg-gradient-to-br ${cfg.bg}
+                  p-5 flex flex-col gap-2 w-full max-w-sm
+                `}
+              >
+                <span className={`self-start text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${cfg.tag} text-white`}>
+                  {cfg.label}
+                </span>
+                <div className={`text-2xl font-bold ${cfg.nr}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {card.id}
+                </div>
+                <div className="text-lg font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {card.title}
+                </div>
+                <div className="h-px bg-white/20 my-1" />
+                <div className="text-sm text-white/80 leading-relaxed">
+                  {getCardBody(card, type)}
+                </div>
+                {type === 'data' && (card as DataCard).examples && (
+                  <div className="text-xs text-white/50 mt-1">
+                    <span className="font-semibold">Beispiele: </span>
+                    {(card as DataCard).examples}
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowDetail(false)}
+                  className="mt-3 text-xs text-white/50 hover:text-white/80 transition-colors self-center"
+                >
+                  Schließen
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
     )
   }
 
