@@ -75,7 +75,7 @@ export default function Done() {
         className="flex flex-col sm:flex-row gap-3 w-full max-w-xs"
       >
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/?leaderboard=1')}
           className="flex-1 py-3 rounded-xl text-white font-bold"
           style={{ background: 'var(--color-accent)' }}
         >

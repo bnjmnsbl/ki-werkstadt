@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Logo from '../components/Logo'
 import Leaderboard from '../components/Leaderboard'
 
 export default function Home() {
   const navigate = useNavigate()
-  const [showLeaderboard, setShowLeaderboard] = useState(false)
+  const [searchParams] = useSearchParams()
+  const [showLeaderboard, setShowLeaderboard] = useState(searchParams.get('leaderboard') === '1')
 
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: 'var(--color-bg)' }}>
