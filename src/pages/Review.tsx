@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useReviews } from '../hooks/useReviews'
@@ -16,17 +16,17 @@ export default function Review() {
   const [showSummary, setShowSummary] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [initialized, setInitialized] = useState(false)
 
   const allocated = Object.values(allocations).reduce((a, b) => a + b, 0)
   const remaining = TOTAL_CHIPS - allocated
 
-  if (ideas.length > 0 && !initialized) {
-    const init: Record<string, number> = {}
-    ideas.forEach(idea => { init[idea.id] = 0 })
-    setAllocations(init)
-    setInitialized(true)
-  }
+  useEffect(() => {
+    if (ideas.length > 0) {
+      const init: Record<string, number> = {}
+      ideas.forEach(idea => { init[idea.id] = 0 })
+      setAllocations(init)
+    }
+  }, [ideas])
 
   function handleChange(ideaId: string, chips: number) {
     setAllocations(prev => ({ ...prev, [ideaId]: chips }))
